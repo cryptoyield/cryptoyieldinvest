@@ -1,0 +1,103 @@
+REQUISITOS DE CONTRATOS INTELIGENTES PARA PLATAFORMA DE INVERSIÓN
+
+1. FUNCIONALIDAD PRINCIPAL
+   - Recibir USDT de los inversores
+   - Almacenar información de inversiones
+   - Calcular retornos
+   - Procesar retiros
+   - Gestionar diferentes planes de inversión
+
+2. ESTRUCTURA DE DATOS
+
+   a) Planes de Inversión:
+      - ID del plan
+      - Tasa de retorno
+      - Duración del bloqueo
+      - Inversión mínima
+      - Estado (activo/inactivo)
+
+   b) Inversiones:
+      - ID de inversión
+      - Dirección del inversor
+      - Cantidad invertida
+      - Plan seleccionado
+      - Fecha de inicio
+      - Fecha de finalización
+      - Estado (activo/completado)
+      - Retorno esperado
+
+3. FUNCIONES REQUERIDAS
+
+   a) Gestión de Inversiones:
+      - depositInvestment(uint256 planId) - Recibir USDT y registrar inversión
+      - withdrawInvestment(uint256 investmentId) - Procesar retiros al vencimiento
+      - getInvestmentDetails(uint256 investmentId) - Obtener detalles de inversión
+      - getUserInvestments(address investor) - Listar inversiones del usuario
+
+   b) Administración:
+      - addInvestmentPlan(uint256 rate, uint256 duration, uint256 minAmount)
+      - updatePlanStatus(uint256 planId, bool active)
+      - withdrawFees() - Retirar comisiones del contrato
+      - emergencyWithdraw() - Función de emergencia para el propietario
+
+4. EVENTOS A EMITIR
+
+   - InvestmentCreated(address investor, uint256 amount, uint256 planId)
+   - InvestmentWithdrawn(address investor, uint256 amount, uint256 profit)
+   - PlanAdded(uint256 planId, uint256 rate, uint256 duration)
+   - PlanUpdated(uint256 planId, bool active)
+
+5. MEDIDAS DE SEGURIDAD
+
+   a) Control de Acceso:
+      - Funciones administrativas restringidas al propietario
+      - Verificaciones de roles para operaciones críticas
+      - Pausable en caso de emergencia
+
+   b) Protección de Fondos:
+      - Verificación de saldos antes de retiros
+      - Límites de inversión por dirección
+      - Bloqueo de fondos durante el período de inversión
+      - Protección contra reentrancy
+
+   c) Validaciones:
+      - Verificar montos mínimos de inversión
+      - Validar duración del bloqueo
+      - Comprobar estado del plan antes de inversión
+
+6. INTERACCIÓN CON TOKENS
+
+   a) USDT:
+      - Interfaz para interactuar con el contrato de USDT
+      - Manejo de decimales
+      - Verificación de allowance
+      - Procesamiento de transferencias
+
+7. OPTIMIZACIÓN
+
+   - Uso eficiente de gas
+   - Estructuras de datos optimizadas
+   - Batch processing para operaciones múltiples
+   - Eventos para tracking off-chain
+
+8. CONSIDERACIONES ADICIONALES
+
+   - Implementar upgradeable contracts
+   - Sistema de referidos (opcional)
+   - Histórico de transacciones
+   - Mecanismo de staking
+   - Sistema de recompensas
+
+9. TESTING
+
+   - Test cases para todas las funciones
+   - Pruebas de seguridad
+   - Simulación de ataques
+   - Validación de cálculos de retorno
+
+10. DOCUMENTACIÓN
+
+    - Comentarios detallados en el código
+    - Documentación técnica
+    - Guía de integración
+    - Auditoría de seguridad

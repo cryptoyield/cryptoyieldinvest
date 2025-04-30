@@ -1,0 +1,92 @@
+SISTEMA DE REFERIDOS Y BONO DE BIENVENIDA
+
+1. ESTRUCTURA DEL SISTEMA DE REFERIDOS
+
+a) Niveles de Referidos:
+   - Nivel 1 (Directo): 5% de las ganancias del referido
+   - Nivel 2: 3% de las ganancias del referido
+   - Nivel 3: 1% de las ganancias del referido
+
+b) Bono de Bienvenida:
+   - 10% adicional en el primer depósito para cada plan
+   - Se aplica automáticamente al realizar la primera inversión
+   - No requiere código de referido para obtenerlo
+
+2. FUNCIONAMIENTO
+
+a) Generación de Enlaces:
+   - Cada usuario recibe un enlace único de referido
+   - El enlace contiene la dirección de wallet del referente
+   - Formato: https://app.cryptoyield.com/ref/{wallet_address}
+
+b) Registro de Referidos:
+   - Se almacena la relación referente-referido en el smart contract
+   - Se mantiene un árbol de referidos para cada usuario
+   - Se trackean las inversiones de los referidos
+
+c) Distribución de Comisiones:
+   - Las comisiones se calculan sobre las ganancias del referido
+   - Se pagan automáticamente cuando el referido recibe sus ganancias
+   - Se acumulan en el balance del referente
+
+3. EJEMPLO DE GANANCIAS
+
+Inversión de 1000 USDT en Plan Conservador (5% mensual):
+- Ganancia base: 50 USDT
+- Bono bienvenida (10%): +5 USDT
+- Total: 55 USDT
+
+Comisiones para referentes:
+- Nivel 1: 2.75 USDT (5% de 55)
+- Nivel 2: 1.65 USDT (3% de 55)
+- Nivel 3: 0.55 USDT (1% de 55)
+
+4. REGLAS Y LIMITACIONES
+
+a) Elegibilidad:
+   - Solo usuarios verificados pueden participar
+   - Debe tener al menos una inversión activa
+   - No se permiten auto-referidos
+
+b) Pagos:
+   - Mínimo 100 USDT para retirar comisiones
+   - Sin límite máximo de referidos
+
+c) Restricciones:
+   - Un usuario solo puede tener un referente
+   - El vínculo es permanente
+   - No se pueden cambiar referentes
+
+5. INTERFAZ DE USUARIO
+
+a) Dashboard de Referidos:
+   - Lista de referidos directos
+   - Árbol de referidos multinivel
+   - Estadísticas de ganancias
+   - Historial de comisiones
+
+b) Herramientas de Marketing:
+   - Enlaces personalizados
+   - Material promocional
+   - Estadísticas de conversión
+   - QR codes para compartir
+
+6. BENEFICIOS DEL SISTEMA
+
+Para Referentes:
+- Ingresos pasivos recurrentes
+- Construcción de red multinivel
+- Bonificaciones por rendimiento
+
+
+Para Referidos:
+- Bono de bienvenida del 10%
+- Link para referir
+
+8. CONSIDERACIONES TÉCNICAS
+
+a) Base de Datos:
+   - Estructura eficiente
+   - Indexación de relaciones
+   - Backup automático
+   - Auditoría de transacciones
