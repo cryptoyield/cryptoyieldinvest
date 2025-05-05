@@ -1,16 +1,26 @@
 // Mock data for development and testing purposes
 export const MOCK_ADDRESSES = {
-  // Obscured wallet addresses for demonstration
-  wallets: [
-    "0xf3B2c1A4E1C5F3D8B6E1c9A2B1D8E9F7A6B5C4D3",
-    "0xE9D4C2B3A1F8E7D6C5B4A3F2E1D8C7B6A5F4E3D2",
-    "0xD8C7B6A5F4E3D2C1B0A9F8E7D6C5B4A3F2E1D9C8",
-    "0xC7B6A5F4E3D2C1B0A9F8E7D6C5B4A3F2E1D9C8B7",
-    "0xB6A5F4E3D2C1B0A9F8E7D6C5B4A3F2E1D9C8B7A6",
-    "0xA5F4E3D2C1B0A9F8E7D6C5B4A3F2E1D9C8B7A6B5",
-    "0x94E3D2C1B0A9F8E7D6C5B4A3F2E1D9C8B7A6B5C4",
-    "0x83D2C1B0A9F8E7D6C5B4A3F2E1D9C8B7A6B5C4D3"
-  ],
+  // Generate a random Ethereum address
+  generateAddress: () => {
+    const chars = '0123456789abcdefABCDEF';
+    let address = '0x';
+    for (let i = 0; i < 40; i++) {
+      address += chars[Math.floor(Math.random() * chars.length)];
+    }
+    return address;
+  },
+  
+  // Generate a list of unique addresses
+  getUniqueAddresses: (count: number) => {
+    const addresses = new Set<string>();
+    while (addresses.size < count) {
+      addresses.add(MOCK_ADDRESSES.generateAddress());
+    }
+    return Array.from(addresses);
+  },
+  
+  // Cache of unique addresses
+  wallets: [] as string[],
   
   // Helper function to format wallet address
   formatAddress: (address: string) => {
@@ -19,6 +29,11 @@ export const MOCK_ADDRESSES = {
   
   // Generate mock withdrawal data
   generateWithdrawal: () => {
+    // Initialize wallets if empty
+    if (MOCK_ADDRESSES.wallets.length === 0) {
+      MOCK_ADDRESSES.wallets = MOCK_ADDRESSES.getUniqueAddresses(8);
+    }
+    
     const wallet = MOCK_ADDRESSES.wallets[Math.floor(Math.random() * MOCK_ADDRESSES.wallets.length)];
     return {
       id: `w-${Date.now()}`,
