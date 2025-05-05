@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { QRCodeSVG } from 'qrcode.react';
-import { FaTimes, FaInfoCircle, FaCheckCircle, FaUsers, FaCopy, FaExternalLinkAlt } from 'react-icons/fa';
+import { FaTimes, FaInfoCircle, FaCheckCircle, FaUsers, FaCopy, FaExternalLinkAlt, FaExclamationTriangle } from 'react-icons/fa';
 import { useWallet } from '../context/WalletContext';
 
 interface Plan {
@@ -33,10 +32,14 @@ function InvestModal({ plan, onClose }: InvestModalProps) {
   const [welcomeBonus, setWelcomeBonus] = useState('0');
   const [showCopied, setShowCopied] = useState(false);
 
+  // Checking if this is the user's first deposit
+  const isFirstDeposit = true; // Replace with your actual logic to determine if this is first deposit
+  
   useEffect(() => {
-    const bonus = parseFloat(amount) * 0.1;
+    // Only apply bonus if this is the first deposit
+    const bonus = isFirstDeposit ? parseFloat(amount) * 0.1 : 0;
     setWelcomeBonus(isNaN(bonus) ? '0' : bonus.toFixed(2));
-  }, [amount]);
+  }, [amount, isFirstDeposit]);
 
   const calculateExpectedReturn = (principal: number) => {
     return principal * (1 + (plan.rate / 100));
@@ -128,7 +131,7 @@ function InvestModal({ plan, onClose }: InvestModalProps) {
               <div className="bg-success-50 dark:bg-success-900/20 rounded-lg p-4 mb-4">
                 <div className="flex items-center justify-center text-success-600 dark:text-success-500">
                   <FaUsers className="w-4 h-4 mr-2" />
-                  <span>Welcome Bonus: +{welcomeBonus} USDT (10%)</span>
+                  <span>Welcome Bonus: +{welcomeBonus} USDT (10% - First deposit bonus)</span>
                 </div>
               </div>
               <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -182,11 +185,13 @@ function InvestModal({ plan, onClose }: InvestModalProps) {
                 <h4 className="text-lg font-semibold mb-3">Investment Address (Arbitrum One)</h4>
                 <div className="flex justify-center mb-4">
                   <div className="bg-white p-2 rounded-lg">
-                    <QRCodeSVG 
-                      value={INVESTMENT_ADDRESS}
-                      size={180}
-                      level="H"
-                      includeMargin={true}
+                    {/* Static QR code image */}
+                    <img 
+                      src="/path-to-your-qr-image.png" 
+                      alt="Investment QR Code"
+                      width={180}
+                      height={180}
+                      className="max-w-full h-auto"
                     />
                   </div>
                 </div>
@@ -206,6 +211,20 @@ function InvestModal({ plan, onClose }: InvestModalProps) {
                       )}
                     </button>
                   </div>
+                </div>
+              </div>
+              
+              {/* New Warning Alert */}
+              <div className="bg-error-50 dark:bg-error-900/20 p-4 rounded-lg mb-6 border-l-4 border-error-500">
+                <h4 className="font-medium mb-2 flex items-center text-error-700 dark:text-error-400">
+                  <FaExclamationTriangle className="w-4 h-4 mr-2" />
+                  Recommendation
+                </h4>
+                <div className="text-sm text-error-600 dark:text-error-400">
+                  <p>
+                    Make sure that, when making the transfer, you select USDT on the Arbitrum network (ARB or Arbitrum One) from the wallet or exchange you're sending funds from.
+                    Do not use another network (such as Ethereum, BSC, or Tron), as funds could be lost or become trapped.
+                  </p>
                 </div>
               </div>
               
@@ -248,7 +267,7 @@ function InvestModal({ plan, onClose }: InvestModalProps) {
                     </span>
                   </div>
                   <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-600 dark:text-gray-300">Welcome Bonus (10%):</span>
+                    <span className="text-gray-600 dark:text-gray-300">Welcome Bonus (10% - First deposit only):</span>
                     <span className="font-bold text-warning-600 dark:text-warning-500">
                       +{welcomeBonus} USDT
                     </span>
