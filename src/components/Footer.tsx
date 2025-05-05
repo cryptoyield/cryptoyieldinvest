@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FaWallet, FaChartLine, FaArrowRight, FaShieldAlt, FaQuestionCircle, FaBook } from 'react-icons/fa';
+import { FaWallet, FaChartLine, FaArrowRight, FaShieldAlt, FaQuestionCircle, FaBook, FaMapMarkerAlt } from 'react-icons/fa';
 
 function Footer() {
   const [showGuide, setShowGuide] = useState(false);
@@ -40,6 +40,10 @@ function Footer() {
             <p className="text-gray-600 dark:text-gray-300 mb-4">
               Connect your wallet and grow your USDT with our secure investment plans on Arbitrum One.
             </p>
+            <div className="flex items-start space-x-2 text-sm text-gray-500 dark:text-gray-400">
+              <FaMapMarkerAlt className="w-4 h-4 mt-1 flex-shrink-0" />
+              <p>34C Bd Joseph II, 1840 Ville-Haute Luxembourg, Luxemburgo</p>
+            </div>
           </div>
           
           <div>

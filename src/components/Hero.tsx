@@ -5,7 +5,8 @@ import { useWallet } from '../context/WalletContext';
 function Hero() {
   const { isConnected, connectWallet, connecting } = useWallet();
 
-  const handleConnectWallet = async () => {
+  const handleConnectWallet = async (e: React.MouseEvent) => {
+    e.preventDefault();
     try {
       await connectWallet();
     } catch (error) {
@@ -79,7 +80,10 @@ function Hero() {
                       Connecting...
                     </>
                   ) : (
-                    'Connect Wallet'
+                    <>
+                      <FaWallet className="w-4 h-4 mr-2" />
+                      Connect Wallet
+                    </>
                   )}
                 </button>
               )}

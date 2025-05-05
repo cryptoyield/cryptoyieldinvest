@@ -11,8 +11,10 @@ interface Withdrawal {
 
 function WithdrawalFeed() {
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     // Add initial withdrawals (2-3)
     setWithdrawals(MOCK_ADDRESSES.generateWithdrawals());
 
@@ -22,17 +24,22 @@ function WithdrawalFeed() {
       const interval = Math.random() * 7000 + 8000;
       
       return setTimeout(() => {
-        setWithdrawals(prev => {
-          const newWithdrawals = MOCK_ADDRESSES.generateWithdrawals();
-          return [...newWithdrawals, ...prev].slice(0, 4); // Keep only last 4 withdrawals
-        });
+        if (mounted) {
+          setWithdrawals(prev => {
+            const newWithdrawals = MOCK_ADDRESSES.generateWithdrawals();
+            return [...newWithdrawals, ...prev].slice(0, 4); // Keep only last 4 withdrawals
+          });
+        }
         intervalId = createInterval(); // Create next interval
       }, interval);
     };
 
     let intervalId = createInterval();
 
-    return () => clearTimeout(intervalId);
+    return () => {
+      setMounted(false);
+      clearTimeout(intervalId);
+    };
   }, []);
 
   return (
