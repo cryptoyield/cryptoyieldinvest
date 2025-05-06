@@ -16,78 +16,61 @@ export const WithdrawalFeedContext = React.createContext<{
   withdrawals: [],
 });
 
-// Función para formatear direcciones en formato Arbitrum (4 primeros dígitos + 4 últimos dígitos)
-const formatArbitrumAddress = (address: string) => {
-  if (!address || address.length < 8) return address;
-  
-  // Asegurarse de que la dirección empiece con "0x"
-  const formattedAddress = address.startsWith('0x') ? address : `0x${address}`;
-  
-  // Tomar los primeros 4 y últimos 4 caracteres después del "0x"
-  return `${formattedAddress.substring(0, 6)}...${formattedAddress.substring(formattedAddress.length - 4)}`;
-};
-
 export function WithdrawalFeedProvider({ children }: { children: React.ReactNode }) {
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [usedAddresses, setUsedAddresses] = useState<Set<string>>(new Set());
   
-  // Usar useRef para mantener un registro de las direcciones usadas sin causar re-renderizaciones
-  const usedAddressesRef = React.useRef<Set<string>>(new Set());
-  
   useEffect(() => {
     // Function to generate unique withdrawals (no address repeats)
-    const generateUniqueWithdrawal = () => {
-      // Generar SOLO UNA notificación a la vez
-      let newWithdrawal;
-      do {
-        newWithdrawal = MOCK_ADDRESSES.generateWithdrawals(1)[0];
-      } while (usedAddressesRef.current.has(newWithdrawal.wallet));
+    const generateUniqueWithdrawals = () => {
+      const newWithdrawals: Withdrawal[] = [];
+      const count = Math.floor(Math.random() * 2) + 1; // Generate 1-2 withdrawals at a time
       
-      // Actualizar el ref de direcciones usadas (sin causar re-render)
-      usedAddressesRef.current.add(newWithdrawal.wallet);
+      for (let i = 0; i < count; i++) {
+        let newWithdrawal;
+        do {
+          newWithdrawal = MOCK_ADDRESSES.generateWithdrawals(1)[0];
+        } while (usedAddresses.has(newWithdrawal.wallet));
+        
+        newWithdrawals.push(newWithdrawal);
+        setUsedAddresses(prev => new Set(prev).add(newWithdrawal.wallet));
+      }
       
-      return newWithdrawal;
+      return newWithdrawals;
     };
 
-    // Añadir solo UNA notificación inicial
-    const initialWithdrawal = generateUniqueWithdrawal();
-    setWithdrawals([initialWithdrawal]);
+    // Add initial withdrawals (2-3)
+    const initialWithdrawals = generateUniqueWithdrawals();
+    setWithdrawals(initialWithdrawals);
 
-    // Función para añadir nuevas notificaciones a intervalos muy espaciados
+    // Function to add new withdrawal at random intervals
     const addNewWithdrawal = () => {
-      // Intervalos mucho más largos: entre 30-60 segundos
-      const interval = Math.random() * 30000 + 30000;
+      // Random interval between 3-8 seconds for more frequent notifications
+      const interval = Math.random() * 5000 + 3000;
       
       return setTimeout(() => {
-        const newWithdrawal = generateUniqueWithdrawal();
+        const newWithdrawals = generateUniqueWithdrawals();
         
         setWithdrawals(prev => {
-          // Mantener solo las últimas 5 notificaciones para evitar acumulación
-          return [newWithdrawal, ...prev].slice(0, 5);
+          // Keep only the last 10 withdrawals to manage memory
+          return [...newWithdrawals, ...prev].slice(0, 10);
         });
         
-        // Resetear usedAddresses si se hace demasiado grande
-        if (usedAddressesRef.current.size > 500) {
-          usedAddressesRef.current = new Set();
+        // Reset usedAddresses if it gets too large to prevent running out of addresses
+        if (usedAddresses.size > 1000) {
+          setUsedAddresses(new Set());
         }
         
-        timeoutId = addNewWithdrawal(); // Programar la siguiente notificación
+        timeoutId = addNewWithdrawal(); // Schedule next withdrawal
       }, interval);
     };
     
-    // Esperar 5 segundos antes de empezar a mostrar nuevas notificaciones
-    // para evitar que aparezcan demasiadas al inicio
-    const initialDelay = setTimeout(() => {
-      timeoutId = addNewWithdrawal();
-    }, 5000);
-    
-    let timeoutId: ReturnType<typeof setTimeout>;
+    let timeoutId = addNewWithdrawal();
     
     return () => {
-      clearTimeout(initialDelay);
-      if (timeoutId) clearTimeout(timeoutId);
+      clearTimeout(timeoutId);
     };
-  }, []);
+  }, [usedAddresses]);
 
   return (
     <WithdrawalFeedContext.Provider value={{ withdrawals }}>
@@ -98,44 +81,25 @@ export function WithdrawalFeedProvider({ children }: { children: React.ReactNode
 
 function WithdrawalNotification({ withdrawal, index }: { withdrawal: Withdrawal, index: number }) {
   const [visible, setVisible] = useState(true);
-  const [opacity, setOpacity] = useState(1);
   
   useEffect(() => {
-    // Tiempo total que la notificación permanecerá visible: 40-60 segundos
-    const visibilityDuration = 40000 + (index * 5000);
-    
-    // Comenzar a desvanecer la notificación después de 30 segundos
-    const fadeTimer = setTimeout(() => {
-      setOpacity(0.7);
-      
-      // Después de 5 segundos más, bajar más la opacidad
-      setTimeout(() => {
-        setOpacity(0.4);
-      }, 5000);
-      
-    }, 30000);
-    
-    // Eliminar la notificación después del tiempo total
-    const removeTimer = setTimeout(() => {
+    // Hacer que la notificación desaparezca después de un tiempo
+    const timer = setTimeout(() => {
       setVisible(false);
-    }, visibilityDuration);
+    }, 10000 + (index * 1000)); // Duración escalonada basada en el índice
     
-    return () => {
-      clearTimeout(fadeTimer);
-      clearTimeout(removeTimer);
-    };
+    return () => clearTimeout(timer);
   }, [index]);
   
   if (!visible) return null;
   
   return (
     <div
-      style={{ opacity }}
       className={`
         bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm 
         rounded-lg shadow-lg p-4 mb-2 flex items-center
-        transform transition-all duration-1000 ease-in-out
-        ${visible ? 'translate-y-0' : 'translate-y-8 opacity-0'}
+        transform transition-all duration-500 ease-in-out
+        ${visible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}
         border border-gray-100 dark:border-gray-700
       `}
     >
@@ -144,7 +108,7 @@ function WithdrawalNotification({ withdrawal, index }: { withdrawal: Withdrawal,
       </div>
       <div>
         <p className="text-sm font-medium text-gray-900 dark:text-white">
-          {formatArbitrumAddress(withdrawal.wallet)}
+          {MOCK_ADDRESSES.formatAddress(withdrawal.wallet)}
         </p>
         <p className="text-xs text-green-600 dark:text-green-500 font-medium">
           +{withdrawal.amount} USDT
