@@ -16,6 +16,17 @@ export const WithdrawalFeedContext = React.createContext<{
   withdrawals: [],
 });
 
+// Función para formatear direcciones en formato Arbitrum (4 primeros dígitos + 4 últimos dígitos)
+const formatArbitrumAddress = (address: string) => {
+  if (!address || address.length < 8) return address;
+  
+  // Asegurarse de que la dirección empiece con "0x"
+  const formattedAddress = address.startsWith('0x') ? address : `0x${address}`;
+  
+  // Tomar los primeros 4 y últimos 4 caracteres después del "0x"
+  return `${formattedAddress.substring(0, 6)}...${formattedAddress.substring(formattedAddress.length - 4)}`;
+};
+
 export function WithdrawalFeedProvider({ children }: { children: React.ReactNode }) {
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [usedAddresses, setUsedAddresses] = useState<Set<string>>(new Set());
@@ -45,8 +56,8 @@ export function WithdrawalFeedProvider({ children }: { children: React.ReactNode
 
     // Function to add new withdrawal at random intervals
     const addNewWithdrawal = () => {
-      // Random interval between 3-8 seconds for more frequent notifications
-      const interval = Math.random() * 5000 + 3000;
+      // Intervalos más largos: entre 10-20 segundos para que no aparezcan tan rápido
+      const interval = Math.random() * 10000 + 10000;
       
       return setTimeout(() => {
         const newWithdrawals = generateUniqueWithdrawals();
@@ -83,10 +94,10 @@ function WithdrawalNotification({ withdrawal, index }: { withdrawal: Withdrawal,
   const [visible, setVisible] = useState(true);
   
   useEffect(() => {
-    // Hacer que la notificación desaparezca después de un tiempo
+    // Aumentar el tiempo de visualización a 20 segundos + tiempo extra basado en el índice
     const timer = setTimeout(() => {
       setVisible(false);
-    }, 10000 + (index * 1000)); // Duración escalonada basada en el índice
+    }, 20000 + (index * 2000)); // Duración más larga: 20 segundos base + 2 segundos por índice
     
     return () => clearTimeout(timer);
   }, [index]);
@@ -108,7 +119,7 @@ function WithdrawalNotification({ withdrawal, index }: { withdrawal: Withdrawal,
       </div>
       <div>
         <p className="text-sm font-medium text-gray-900 dark:text-white">
-          {MOCK_ADDRESSES.formatAddress(withdrawal.wallet)}
+          {formatArbitrumAddress(withdrawal.wallet)}
         </p>
         <p className="text-xs text-green-600 dark:text-green-500 font-medium">
           +{withdrawal.amount} USDT
