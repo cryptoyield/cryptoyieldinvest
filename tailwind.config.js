@@ -59,8 +59,12 @@ export default {
         },
       },
       animation: {
-        'pulse-slow': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',
-      },
+  'fade-in': 'fade-in 1s ease-out forwards',
+  'fade-out': 'fade-out 1s ease-out forwards',
+  'slide-up': 'slide-up 15s ease-out forwards',
+  'notification-show': 'fade-in 1s ease-out forwards, fade-out 1s ease-in 6s forwards',
+},
+
       backdropBlur: {
         xs: '2px',
       },
