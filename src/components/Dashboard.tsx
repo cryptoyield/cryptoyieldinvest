@@ -28,9 +28,21 @@ function Dashboard({ onViewPlans }: { onViewPlans: () => void }) {
     return `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
   };
 
+  // Actualización del enlace de referido para usar el dominio correcto
+  const getCorrectReferralLink = () => {
+    if (!referralLink) return '';
+    
+    // Extraer el código de referido (la parte después de /ref/)
+    const refCode = referralLink.split('/ref/')[1];
+    
+    // Crear el nuevo enlace con el dominio correcto
+    return `https://cryptoyieldinvest.vercel.app/ref/${refCode}`;
+  };
+
   const copyReferralLink = async () => {
-    if (referralLink) {
-      await navigator.clipboard.writeText(referralLink);
+    const correctLink = getCorrectReferralLink();
+    if (correctLink) {
+      await navigator.clipboard.writeText(correctLink);
       setShowCopied(true);
       setTimeout(() => setShowCopied(false), 2000);
     }
@@ -150,7 +162,7 @@ function Dashboard({ onViewPlans }: { onViewPlans: () => void }) {
                 <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mb-4">
                   <div className="flex items-center justify-between">
                     <div className="truncate flex-1 mr-4 font-mono text-sm">
-                      {referralLink || 'Connect wallet to get your referral link'}
+                      {getCorrectReferralLink() || 'Connect wallet to get your referral link'}
                     </div>
                     <button
                       onClick={copyReferralLink}
