@@ -6,56 +6,62 @@ import Footer from './components/Footer';
 import Dashboard from './components/Dashboard';
 import AdminDashboard from './components/AdminDashboard';
 import LoadingScreen from './components/LoadingScreen';
-import WithdrawalFeed from './components/WithdrawalFeed';
 import FAQ from './components/FAQ';
 import Legal from './components/Legal';
-import { WalletProvider } from './context/WalletContext';
+import { WalletProvider, useWallet } from './context/WalletContext';
 import { ThemeProvider } from './context/ThemeContext';
-import { AdminProvider } from './context/AdminContext';
-import { useWallet } from './context/WalletContext';
-import { useAdmin } from './context/AdminContext';
+import { AdminProvider, useAdmin } from './context/AdminContext';
+import { WithdrawalFeedProvider } from './components/WithdrawalFeed';
+import WithdrawalFeed from './components/WithdrawalFeed';
+
+// Definición de los posibles estados de la aplicación
+const AppState = {
+  HOME: 'home',
+  DASHBOARD: 'dashboard',
+  PLANS: 'plans',
+  FAQ: 'faq',
+  LEGAL: 'legal'
+};
 
 function AppContent() {
-  const [showDashboard, setShowDashboard] = useState(false);
-  const [showFAQ, setShowFAQ] = useState(false);
-  const [showLegal, setShowLegal] = useState(false);
-  const [showPlans, setShowPlans] = useState(false);
+  // Estado unificado para la navegación
+  const [currentView, setCurrentView] = useState(AppState.HOME);
   const [isLoading, setIsLoading] = useState(true);
+  const [showPlansInDashboard, setShowPlansInDashboard] = useState(false);
+  
   const { isConnected } = useWallet();
   const { isAdmin } = useAdmin();
 
   useEffect(() => {
+    // Simulación de carga inicial
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 2000);
 
+    // Manejadores de eventos para navegación
     const handleShowFAQ = () => {
-      setShowFAQ(true);
-      setShowDashboard(false);
-      setShowLegal(false);
-      setShowPlans(false);
+      setCurrentView(AppState.FAQ);
+      setShowPlansInDashboard(false);
       window.scrollTo(0, 0);
     };
 
     const handleShowLegal = () => {
-      setShowLegal(true);
-      setShowDashboard(false);
-      setShowFAQ(false);
-      setShowPlans(false);
+      setCurrentView(AppState.LEGAL);
+      setShowPlansInDashboard(false);
       window.scrollTo(0, 0);
     };
 
     const handleShowPlans = () => {
-      setShowPlans(true);
-      setShowFAQ(false);
-      setShowLegal(false);
+      setCurrentView(AppState.PLANS);
       window.scrollTo(0, 0);
     };
 
+    // Registrar event listeners para navegación
     window.addEventListener('showFAQ', handleShowFAQ);
     window.addEventListener('showLegal', handleShowLegal);
     window.addEventListener('showPlans', handleShowPlans);
 
+    // Limpieza al desmontar
     return () => {
       clearTimeout(timer);
       window.removeEventListener('showFAQ', handleShowFAQ);
@@ -64,13 +70,12 @@ function AppContent() {
     };
   }, []);
 
+  // Función para manejar clic en planes de inversión
   const handlePlansClick = () => {
-    if (showDashboard) {
-      setShowPlans(true);
-      setShowDashboard(true);
+    if (currentView === AppState.DASHBOARD) {
+      setShowPlansInDashboard(true);
     } else {
-      setShowDashboard(false);
-      setShowPlans(false);
+      // Si no está en dashboard, desplazar a la sección de planes
       const plansSection = document.getElementById('plans');
       if (plansSection) {
         const yOffset = -80;
@@ -80,48 +85,67 @@ function AppContent() {
     }
   };
 
+  // Función para manejar clic en el dashboard
+  const handleDashboardClick = () => {
+    if (currentView === AppState.DASHBOARD) {
+      // Si ya está en dashboard, volver a home
+      setCurrentView(AppState.HOME);
+    } else {
+      // Si no está en dashboard, ir a dashboard
+      setCurrentView(AppState.DASHBOARD);
+      setShowPlansInDashboard(false);
+    }
+  };
+
   if (isLoading) {
     return <LoadingScreen />;
   }
 
-  return (
-    <div className="min-h-screen flex flex-col">
-      <Navbar 
-        onDashboardClick={() => {
-          setShowDashboard(!showDashboard);
-          setShowFAQ(false);
-          setShowLegal(false);
-          setShowPlans(false);
-        }} 
-        onPlansClick={handlePlansClick}
-        showDashboard={showDashboard}
-      />
-      
-      <main className="flex-grow">
-        {showDashboard ? (
-          isConnected ? (
-            isAdmin ? (
-              showPlans ? <InvestmentPlans /> : <AdminDashboard />
-            ) : (
-              <Dashboard onViewPlans={() => setShowPlans(true)} />
-            )
-          ) : (
-            <Hero />
-          )
-        ) : showFAQ ? (
-          <FAQ />
-        ) : showLegal ? (
-          <Legal />
-        ) : (
+  // Renderizar el contenido principal según el estado actual
+  const renderMainContent = () => {
+    switch (currentView) {
+      case AppState.DASHBOARD:
+        if (!isConnected) return <Hero />;
+        
+        if (isAdmin) {
+          return showPlansInDashboard ? <InvestmentPlans /> : <AdminDashboard />;
+        }
+        
+        return <Dashboard onViewPlans={() => setShowPlansInDashboard(true)} />;
+        
+      case AppState.FAQ:
+        return <FAQ />;
+        
+      case AppState.LEGAL:
+        return <Legal />;
+        
+      case AppState.PLANS:
+        return <InvestmentPlans />;
+        
+      case AppState.HOME:
+      default:
+        return (
           <>
             <Hero />
             <InvestmentPlans />
           </>
-        )}
+        );
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex flex-col">
+      <Navbar 
+        onDashboardClick={handleDashboardClick}
+        onPlansClick={handlePlansClick}
+        showDashboard={currentView === AppState.DASHBOARD}
+      />
+      
+      <main className="flex-grow">
+        {renderMainContent()}
       </main>
       
       <Footer />
-      <WithdrawalFeed />
     </div>
   );
 }
@@ -131,7 +155,10 @@ function App() {
     <AdminProvider>
       <ThemeProvider>
         <WalletProvider>
-          <AppContent />
+          <WithdrawalFeedProvider>
+            <AppContent />
+            <WithdrawalFeed />
+          </WithdrawalFeedProvider>
         </WalletProvider>
       </ThemeProvider>
     </AdminProvider>
