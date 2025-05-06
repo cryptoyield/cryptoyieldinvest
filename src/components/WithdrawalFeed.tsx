@@ -31,57 +31,63 @@ export function WithdrawalFeedProvider({ children }: { children: React.ReactNode
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [usedAddresses, setUsedAddresses] = useState<Set<string>>(new Set());
   
+  // Usar useRef para mantener un registro de las direcciones usadas sin causar re-renderizaciones
+  const usedAddressesRef = React.useRef<Set<string>>(new Set());
+  
   useEffect(() => {
     // Function to generate unique withdrawals (no address repeats)
-    const generateUniqueWithdrawals = () => {
-      const newWithdrawals: Withdrawal[] = [];
-      const count = Math.floor(Math.random() * 2) + 1; // Generate 1-2 withdrawals at a time
+    const generateUniqueWithdrawal = () => {
+      // Generar SOLO UNA notificación a la vez
+      let newWithdrawal;
+      do {
+        newWithdrawal = MOCK_ADDRESSES.generateWithdrawals(1)[0];
+      } while (usedAddressesRef.current.has(newWithdrawal.wallet));
       
-      for (let i = 0; i < count; i++) {
-        let newWithdrawal;
-        do {
-          newWithdrawal = MOCK_ADDRESSES.generateWithdrawals(1)[0];
-        } while (usedAddresses.has(newWithdrawal.wallet));
-        
-        newWithdrawals.push(newWithdrawal);
-        setUsedAddresses(prev => new Set(prev).add(newWithdrawal.wallet));
-      }
+      // Actualizar el ref de direcciones usadas (sin causar re-render)
+      usedAddressesRef.current.add(newWithdrawal.wallet);
       
-      return newWithdrawals;
+      return newWithdrawal;
     };
 
-    // Add initial withdrawals (2-3)
-    const initialWithdrawals = generateUniqueWithdrawals();
-    setWithdrawals(initialWithdrawals);
+    // Añadir solo UNA notificación inicial
+    const initialWithdrawal = generateUniqueWithdrawal();
+    setWithdrawals([initialWithdrawal]);
 
-    // Function to add new withdrawal at random intervals
+    // Función para añadir nuevas notificaciones a intervalos muy espaciados
     const addNewWithdrawal = () => {
-      // Intervalos más largos: entre 10-20 segundos para que no aparezcan tan rápido
-      const interval = Math.random() * 10000 + 10000;
+      // Intervalos mucho más largos: entre 30-60 segundos
+      const interval = Math.random() * 30000 + 30000;
       
       return setTimeout(() => {
-        const newWithdrawals = generateUniqueWithdrawals();
+        const newWithdrawal = generateUniqueWithdrawal();
         
         setWithdrawals(prev => {
-          // Keep only the last 10 withdrawals to manage memory
-          return [...newWithdrawals, ...prev].slice(0, 10);
+          // Mantener solo las últimas 5 notificaciones para evitar acumulación
+          return [newWithdrawal, ...prev].slice(0, 5);
         });
         
-        // Reset usedAddresses if it gets too large to prevent running out of addresses
-        if (usedAddresses.size > 1000) {
-          setUsedAddresses(new Set());
+        // Resetear usedAddresses si se hace demasiado grande
+        if (usedAddressesRef.current.size > 500) {
+          usedAddressesRef.current = new Set();
         }
         
-        timeoutId = addNewWithdrawal(); // Schedule next withdrawal
+        timeoutId = addNewWithdrawal(); // Programar la siguiente notificación
       }, interval);
     };
     
-    let timeoutId = addNewWithdrawal();
+    // Esperar 5 segundos antes de empezar a mostrar nuevas notificaciones
+    // para evitar que aparezcan demasiadas al inicio
+    const initialDelay = setTimeout(() => {
+      timeoutId = addNewWithdrawal();
+    }, 5000);
+    
+    let timeoutId: ReturnType<typeof setTimeout>;
     
     return () => {
-      clearTimeout(timeoutId);
+      clearTimeout(initialDelay);
+      if (timeoutId) clearTimeout(timeoutId);
     };
-  }, [usedAddresses]);
+  }, []);
 
   return (
     <WithdrawalFeedContext.Provider value={{ withdrawals }}>
@@ -92,25 +98,44 @@ export function WithdrawalFeedProvider({ children }: { children: React.ReactNode
 
 function WithdrawalNotification({ withdrawal, index }: { withdrawal: Withdrawal, index: number }) {
   const [visible, setVisible] = useState(true);
+  const [opacity, setOpacity] = useState(1);
   
   useEffect(() => {
-    // Aumentar el tiempo de visualización a 20 segundos + tiempo extra basado en el índice
-    const timer = setTimeout(() => {
-      setVisible(false);
-    }, 20000 + (index * 2000)); // Duración más larga: 20 segundos base + 2 segundos por índice
+    // Tiempo total que la notificación permanecerá visible: 40-60 segundos
+    const visibilityDuration = 40000 + (index * 5000);
     
-    return () => clearTimeout(timer);
+    // Comenzar a desvanecer la notificación después de 30 segundos
+    const fadeTimer = setTimeout(() => {
+      setOpacity(0.7);
+      
+      // Después de 5 segundos más, bajar más la opacidad
+      setTimeout(() => {
+        setOpacity(0.4);
+      }, 5000);
+      
+    }, 30000);
+    
+    // Eliminar la notificación después del tiempo total
+    const removeTimer = setTimeout(() => {
+      setVisible(false);
+    }, visibilityDuration);
+    
+    return () => {
+      clearTimeout(fadeTimer);
+      clearTimeout(removeTimer);
+    };
   }, [index]);
   
   if (!visible) return null;
   
   return (
     <div
+      style={{ opacity }}
       className={`
         bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm 
         rounded-lg shadow-lg p-4 mb-2 flex items-center
-        transform transition-all duration-500 ease-in-out
-        ${visible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}
+        transform transition-all duration-1000 ease-in-out
+        ${visible ? 'translate-y-0' : 'translate-y-8 opacity-0'}
         border border-gray-100 dark:border-gray-700
       `}
     >
