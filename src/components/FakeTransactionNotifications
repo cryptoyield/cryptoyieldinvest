@@ -1,0 +1,59 @@
+import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { randomWalletAddress, randomAmount, randomCurrency } from '../utils/fakeDataUtils';
+
+const FakeTransactionNotifications = () => {
+  const [notifications, setNotifications] = useState([]);
+  
+  useEffect(() => {
+    // Genera una nueva notificación cada 8-15 segundos
+    const interval = setInterval(() => {
+      const newNotification = {
+        id: Date.now(),
+        wallet: randomWalletAddress(),
+        amount: randomAmount(),
+        currency: randomCurrency(),
+      };
+      
+      setNotifications(prev => [...prev, newNotification]);
+      
+      // Elimina la notificación después de 5 segundos (en lugar de menos de 1 segundo)
+      setTimeout(() => {
+        setNotifications(prev => prev.filter(n => n.id !== newNotification.id));
+      }, 5000); // Aumentado a 5000ms (5 segundos) para mejor visibilidad
+    }, Math.random() * 7000 + 8000); // Intervalo entre 8-15 segundos para evitar demasiada sobrecarga
+    
+    return () => clearInterval(interval);
+  }, []);
+  
+  return (
+    <div className="fixed bottom-4 right-4 z-50">
+      <AnimatePresence>
+        {notifications.map(notification => (
+          <motion.div
+            key={notification.id}
+            initial={{ opacity: 0, y: 50, scale: 0.3 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.5, transition: { duration: 0.5 } }}
+            className="bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg shadow-lg p-4 mb-3 flex items-center"
+          >
+            <div className="mr-3">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
+            </div>
+            <div>
+              <p className="font-medium">Nueva transacción detectada</p>
+              <p className="text-sm opacity-90">Wallet: {notification.wallet}</p>
+              <p className="text-sm font-bold">
+                +{notification.amount} {notification.currency}
+              </p>
+            </div>
+          </motion.div>
+        ))}
+      </AnimatePresence>
+    </div>
+  );
+};
+
+export default FakeTransactionNotifications;
