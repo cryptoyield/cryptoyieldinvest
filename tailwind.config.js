@@ -58,13 +58,26 @@ export default {
           950: '#450a0a',
         },
       },
+      keyframes: {
+        'fade-in': {
+          '0%': { opacity: '0', transform: 'translateY(10px)' },
+          '100%': { opacity: '1', transform: 'translateY(0)' }
+        },
+        'fade-out': {
+          '0%': { opacity: '1', transform: 'translateY(0)' },
+          '100%': { opacity: '0', transform: 'translateY(-10px)' }
+        },
+        'slide-up': {
+          '0%': { transform: 'translateY(0)' },
+          '100%': { transform: 'translateY(-100%)' }
+        }
+      },
       animation: {
-  'fade-in': 'fade-in 1s ease-out forwards',
-  'fade-out': 'fade-out 1s ease-out forwards',
-  'slide-up': 'slide-up 15s ease-out forwards',
-  'notification-show': 'fade-in 1s ease-out forwards, fade-out 1s ease-in 6s forwards',
-},
-
+        'fade-in': 'fade-in 1s ease-out forwards',
+        'fade-out': 'fade-out 1s ease-out forwards',
+        'slide-up': 'slide-up 15s ease-out forwards',
+        'notification-show': 'fade-in 1s ease-out forwards, fade-out 1s ease-in 6s forwards',
+      },
       backdropBlur: {
         xs: '2px',
       },
