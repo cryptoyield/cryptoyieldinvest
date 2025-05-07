@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { FaArrowUp } from 'react-icons/fa';
 import { MOCK_ADDRESSES } from '../utils/mockData';
 
@@ -7,6 +7,7 @@ interface Withdrawal {
   amount: string;
   wallet: string;
   timestamp: Date;
+  visible?: boolean;
 }
 
 // Context to make the withdrawal feed globally available
@@ -19,12 +20,13 @@ export const WithdrawalFeedContext = React.createContext<{
 export function WithdrawalFeedProvider({ children }: { children: React.ReactNode }) {
   const [withdrawals, setWithdrawals] = useState<Withdrawal[]>([]);
   const [usedAddresses, setUsedAddresses] = useState<Set<string>>(new Set());
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   useEffect(() => {
     // Function to generate unique withdrawals (no address repeats)
     const generateUniqueWithdrawals = () => {
       const newWithdrawals: Withdrawal[] = [];
-      const count = Math.floor(Math.random() * 2) + 1; // Generate 1-2 withdrawals at a time
+      const count = Math.floor(Math.random() * 2) + 1; // 1-2 withdrawals
       
       for (let i = 0; i < count; i++) {
         let newWithdrawal;
@@ -32,45 +34,56 @@ export function WithdrawalFeedProvider({ children }: { children: React.ReactNode
           newWithdrawal = MOCK_ADDRESSES.generateWithdrawals(1)[0];
         } while (usedAddresses.has(newWithdrawal.wallet));
         
-        newWithdrawals.push(newWithdrawal);
+        newWithdrawals.push({
+          ...newWithdrawal,
+          visible: true
+        });
+        
         setUsedAddresses(prev => new Set(prev).add(newWithdrawal.wallet));
       }
       
       return newWithdrawals;
     };
 
-    // Add initial withdrawals (2-3)
-    const initialWithdrawals = generateUniqueWithdrawals();
-    setWithdrawals(initialWithdrawals);
+    // Add initial withdrawals
+    setWithdrawals(generateUniqueWithdrawals());
 
-    // Function to add new withdrawal at random intervals
-    const addNewWithdrawal = () => {
-      // Random interval between 7-15 seconds para un ritmo más natural
-      const interval = Math.random() * 8000 + 7000;
+    // Function to manage withdrawal lifecycle
+    const manageWithdrawals = () => {
+      // Between 10-20 seconds between new withdrawals
+      const interval = Math.random() * 10000 + 10000;
       
-      return setTimeout(() => {
+      timeoutRef.current = setTimeout(() => {
         const newWithdrawals = generateUniqueWithdrawals();
         
+        // Add new withdrawals to the list
         setWithdrawals(prev => {
-          // Keep only the last 8 withdrawals to manage memory
-          return [...newWithdrawals, ...prev].slice(0, 8);
+          const updatedWithdrawals = [...newWithdrawals, ...prev];
+          
+          // Only keep the most recent 6 withdrawals to avoid clutter
+          return updatedWithdrawals.slice(0, 6);
         });
         
-        // Reset usedAddresses if it gets too large to prevent running out of addresses
-        if (usedAddresses.size > 1000) {
+        // Reset used addresses set if it gets too large
+        if (usedAddresses.size > 500) {
           setUsedAddresses(new Set());
         }
         
-        timeoutId = addNewWithdrawal(); // Schedule next withdrawal
+        // Schedule next update
+        timeoutRef.current = setTimeout(manageWithdrawals, interval);
       }, interval);
     };
     
-    let timeoutId = addNewWithdrawal();
+    // Start the cycle
+    manageWithdrawals();
     
+    // Cleanup
     return () => {
-      clearTimeout(timeoutId);
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
     };
-  }, [usedAddresses]);
+  }, []);
 
   return (
     <WithdrawalFeedContext.Provider value={{ withdrawals }}>
@@ -79,39 +92,26 @@ export function WithdrawalFeedProvider({ children }: { children: React.ReactNode
   );
 }
 
-function WithdrawalNotification({ withdrawal, index }: { withdrawal: Withdrawal, index: number }) {
-  const [visible, setVisible] = useState(true);
-  const [isExiting, setIsExiting] = useState(false);
+function WithdrawalNotification({ withdrawal }: { withdrawal: Withdrawal }) {
+  const [isVisible, setIsVisible] = useState(true);
   
   useEffect(() => {
-    // Duración más larga para cada notificación (entre 15 y 20 segundos)
-    const displayDuration = 15000 + (index * 1500); // Duración base de 15 segundos + 1.5 segundos por cada posición
+    // Make notification visible for 15 seconds, then remove
+    const timer = setTimeout(() => {
+      setIsVisible(false);
+    }, 15000);
     
-    // Agregar fase de salida animada
-    const exitTimer = setTimeout(() => {
-      setIsExiting(true);
-    }, displayDuration);
-    
-    // Eliminar notificación del DOM después de la animación de salida
-    const removeTimer = setTimeout(() => {
-      setVisible(false);
-    }, displayDuration + 1000); // 1 segundo extra para la animación de salida
-    
-    return () => {
-      clearTimeout(exitTimer);
-      clearTimeout(removeTimer);
-    };
-  }, [index]);
+    return () => clearTimeout(timer);
+  }, []);
   
-  if (!visible) return null;
+  if (!isVisible) return null;
   
   return (
     <div
       className={`
         bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm 
-        rounded-lg shadow-lg p-4 mb-2 flex items-center
-        transform transition-all duration-700 ease-in-out
-        ${isExiting ? 'translate-y-8 opacity-0' : 'translate-y-0 opacity-100'}
+        rounded-lg shadow-lg p-4 mb-3 flex items-center
+        animate-[fade-in_0.5s_ease-out_forwards,fade-out_1s_ease-in_14s_forwards]
         border border-gray-100 dark:border-gray-700
       `}
     >
@@ -135,14 +135,13 @@ function WithdrawalFeed() {
   
   return (
     <div 
-      className="fixed left-4 bottom-10 z-50 max-w-sm max-h-96 overflow-hidden pointer-events-none"
+      className="fixed left-4 bottom-10 z-50 max-w-sm overflow-hidden pointer-events-none"
     >
-      <div className="space-y-2">
-        {withdrawals.map((withdrawal, index) => (
+      <div className="space-y-1">
+        {withdrawals.map((withdrawal) => (
           <WithdrawalNotification 
             key={withdrawal.id} 
             withdrawal={withdrawal}
-            index={index}
           />
         ))}
       </div>
