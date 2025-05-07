@@ -45,15 +45,15 @@ export function WithdrawalFeedProvider({ children }: { children: React.ReactNode
 
     // Function to add new withdrawal at random intervals
     const addNewWithdrawal = () => {
-      // Random interval between 3-8 seconds for more frequent notifications
-      const interval = Math.random() * 5000 + 3000;
+      // Random interval between 7-15 seconds para un ritmo más natural
+      const interval = Math.random() * 8000 + 7000;
       
       return setTimeout(() => {
         const newWithdrawals = generateUniqueWithdrawals();
         
         setWithdrawals(prev => {
-          // Keep only the last 10 withdrawals to manage memory
-          return [...newWithdrawals, ...prev].slice(0, 10);
+          // Keep only the last 8 withdrawals to manage memory
+          return [...newWithdrawals, ...prev].slice(0, 8);
         });
         
         // Reset usedAddresses if it gets too large to prevent running out of addresses
@@ -81,14 +81,26 @@ export function WithdrawalFeedProvider({ children }: { children: React.ReactNode
 
 function WithdrawalNotification({ withdrawal, index }: { withdrawal: Withdrawal, index: number }) {
   const [visible, setVisible] = useState(true);
+  const [isExiting, setIsExiting] = useState(false);
   
   useEffect(() => {
-    // Hacer que la notificación desaparezca después de un tiempo
-    const timer = setTimeout(() => {
-      setVisible(false);
-    }, 10000 + (index * 1000)); // Duración escalonada basada en el índice
+    // Duración más larga para cada notificación (entre 15 y 20 segundos)
+    const displayDuration = 15000 + (index * 1500); // Duración base de 15 segundos + 1.5 segundos por cada posición
     
-    return () => clearTimeout(timer);
+    // Agregar fase de salida animada
+    const exitTimer = setTimeout(() => {
+      setIsExiting(true);
+    }, displayDuration);
+    
+    // Eliminar notificación del DOM después de la animación de salida
+    const removeTimer = setTimeout(() => {
+      setVisible(false);
+    }, displayDuration + 1000); // 1 segundo extra para la animación de salida
+    
+    return () => {
+      clearTimeout(exitTimer);
+      clearTimeout(removeTimer);
+    };
   }, [index]);
   
   if (!visible) return null;
@@ -98,8 +110,8 @@ function WithdrawalNotification({ withdrawal, index }: { withdrawal: Withdrawal,
       className={`
         bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm 
         rounded-lg shadow-lg p-4 mb-2 flex items-center
-        transform transition-all duration-500 ease-in-out
-        ${visible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}
+        transform transition-all duration-700 ease-in-out
+        ${isExiting ? 'translate-y-8 opacity-0' : 'translate-y-0 opacity-100'}
         border border-gray-100 dark:border-gray-700
       `}
     >
@@ -125,7 +137,7 @@ function WithdrawalFeed() {
     <div 
       className="fixed left-4 bottom-10 z-50 max-w-sm max-h-96 overflow-hidden pointer-events-none"
     >
-      <div className="space-y-2 animate-fade-in">
+      <div className="space-y-2">
         {withdrawals.map((withdrawal, index) => (
           <WithdrawalNotification 
             key={withdrawal.id} 
