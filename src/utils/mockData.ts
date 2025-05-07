@@ -22,10 +22,10 @@ const formatAddress = (address: string): string => {
   return `${prefix}${start}...${end}`;
 };
 
-// Genera montos de retiro realistas entre 130.05 y 99999 USDT
+// Genera montos de retiro realistas entre 130.05 y 9999 USDT
 const generateAmount = (): string => {
-  // Generar montos entre 130.05 y 99999 USDT
-  const baseAmount = (Math.random() * 99868.95 + 130.05).toFixed(2);
+  // Generar montos entre 130.05 y 9999 USDT
+  const baseAmount = (Math.random() * 9868.95 + 130.05).toFixed(2);
   
   // A veces usar números redondos (más comunes en retiros reales)
   if (Math.random() > 0.7) {
