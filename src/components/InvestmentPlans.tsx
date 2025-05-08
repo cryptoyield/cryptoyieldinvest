@@ -1,10 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { Info, ArrowRight, AlertTriangle, ChevronDown, ChevronUp, TrendingUp, Award, Shield, Zap } from 'lucide-react';
+import { Info, ArrowRight, AlertTriangle, ChevronDown, ChevronUp, TrendingUp, Award, Shield, Zap, Star } from 'lucide-react';
 import { useWallet } from '../context/WalletContext';
 import InvestModal from './InvestModal';
 
 // Historical performance data (January through May)
 const historicalReturns = {
+  starter: [
+    { month: 'Jan', return: 10.0 },
+    { month: 'Feb', return: 10.0 },
+    { month: 'Mar', return: 10.0 },
+    { month: 'Apr', return: 10.0 },
+    { month: 'May', return: 10.0 }
+  ],
   conservative: [
     { month: 'Jan', return: 19.5 },
     { month: 'Feb', return: 20.2 },
@@ -32,6 +39,23 @@ const historicalReturns = {
 const marketBenchmark = 7.5;
 
 const plans = [
+  {
+    id: 0,
+    name: 'Starter',
+    icon: Star,
+    rate: 10,
+    duration: 14,
+    minInvestment: 10,
+    maxInvestment: 100,
+    description: 'Perfect for beginners with a guaranteed 10% return after a short 14-day lock period.',
+    color: 'from-amber-500 to-amber-600',
+    textColor: 'text-amber-600 dark:text-amber-400',
+    bgColor: 'bg-amber-50 dark:bg-amber-900/20',
+    borderColor: 'border-amber-200 dark:border-amber-800',
+    historicalData: historicalReturns.starter,
+    riskLevel: 'Very Low',
+    features: ['No experience needed', 'Quick 14-day returns', 'Maximum cap of 100 USDT']
+  },
   {
     id: 1,
     name: 'Conservative',
@@ -106,6 +130,8 @@ function InvestmentPlans() {
       return '1 year';
     } else if (days >= 90) {
       return '3 months';
+    } else if (days >= 30) {
+      return `${days} days`;
     } else {
       return `${days} days`;
     }
@@ -196,17 +222,19 @@ function InvestmentPlans() {
           <input
             id="investment-amount"
             type="number"
-            min="100"
+            min="10"
             value={investmentAmount}
             onChange={(e) => setInvestmentAmount(e.target.value)}
             className="block w-full rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 py-2 px-3 focus:ring-2 focus:ring-primary-500 focus:border-transparent"
           />
         </div>
         
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
           {plans.map(plan => {
             const amount = parseFloat(investmentAmount) || 0;
-            const returns = calculateReturns(amount, plan.rate);
+            const isOverMax = plan.maxInvestment && amount > plan.maxInvestment;
+            const effectiveAmount = isOverMax ? plan.maxInvestment : amount;
+            const returns = calculateReturns(effectiveAmount, plan.rate);
             const isMinimumMet = amount >= plan.minInvestment;
             
             return (
@@ -226,6 +254,13 @@ function InvestmentPlans() {
                   <div className="text-xs flex items-center text-warning-500">
                     <AlertTriangle className="w-3 h-3 mr-1" />
                     Min. {plan.minInvestment} USDT required
+                  </div>
+                )}
+                
+                {isOverMax && (
+                  <div className="text-xs flex items-center text-info-500">
+                    <Info className="w-3 h-3 mr-1" />
+                    Max. {plan.maxInvestment} USDT applied
                   </div>
                 )}
               </div>
@@ -276,10 +311,19 @@ function InvestmentPlans() {
               ))}
             </tr>
             <tr className="border-b border-gray-200 dark:border-gray-700">
+              <td className="p-4 font-medium">Max. Investment</td>
+              {plans.map(plan => (
+                <td key={plan.id} className="p-4 text-center">
+                  {plan.maxInvestment ? `${plan.maxInvestment.toLocaleString()} USDT` : 'Unlimited'}
+                </td>
+              ))}
+            </tr>
+            <tr className="border-b border-gray-200 dark:border-gray-700">
               <td className="p-4 font-medium">Risk Level</td>
               {plans.map(plan => (
                 <td key={plan.id} className="p-4 text-center">
                   <span className={`px-2 py-1 rounded-full text-xs ${
+                    plan.riskLevel === 'Very Low' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' :
                     plan.riskLevel === 'Low' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' :
                     plan.riskLevel === 'Medium' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' :
                     'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
@@ -336,7 +380,7 @@ function InvestmentPlans() {
         {renderCalculator()}
         
         {/* Plans Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {plans.map((plan) => (
             <div 
               key={plan.id} 
@@ -373,6 +417,12 @@ function InvestmentPlans() {
                     <span className="text-gray-500 dark:text-gray-400">Min. Investment</span>
                     <span className="font-medium">{plan.minInvestment.toLocaleString()} USDT</span>
                   </div>
+                  {plan.maxInvestment && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-500 dark:text-gray-400">Max. Investment</span>
+                      <span className="font-medium">{plan.maxInvestment.toLocaleString()} USDT</span>
+                    </div>
+                  )}
                   <div className="flex justify-between">
                     <span className="text-gray-500 dark:text-gray-400 flex items-center">
                       Risk Level
@@ -390,6 +440,7 @@ function InvestmentPlans() {
                       )}
                     </span>
                     <span className={`font-medium px-2 py-0.5 rounded-full text-xs ${
+                      plan.riskLevel === 'Very Low' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' :
                       plan.riskLevel === 'Low' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' :
                       plan.riskLevel === 'Medium' ? 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-300' :
                       'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300'
