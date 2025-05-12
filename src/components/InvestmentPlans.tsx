@@ -6,11 +6,11 @@ import InvestModal from './InvestModal';
 // Historical performance data (January through May)
 const historicalReturns = {
   starter: [
-    { month: 'Jan', return: 10.0 },
-    { month: 'Feb', return: 10.0 },
-    { month: 'Mar', return: 10.0 },
-    { month: 'Apr', return: 10.0 },
-    { month: 'May', return: 10.0 }
+    { month: 'Jan', return: 9.5 },
+    { month: 'Feb', return: 11.2 },
+    { month: 'Mar', return: 9.7 },
+    { month: 'Apr', return: 10.8 },
+    { month: 'May', return: 9.8 }
   ],
   conservative: [
     { month: 'Jan', return: 19.5 },
