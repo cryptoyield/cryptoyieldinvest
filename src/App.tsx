@@ -13,6 +13,8 @@ import { ThemeProvider } from './context/ThemeContext';
 import { AdminProvider, useAdmin } from './context/AdminContext';
 import { WithdrawalFeedProvider } from './components/WithdrawalFeed';
 import WithdrawalFeed from './components/WithdrawalFeed';
+import HowItWorks from './components/HowItWorks'; // <--- Importar el componente HowItWorks
+import { GoogleOAuthProvider } from '@react-oauth/google'; // <--- Importar GoogleOAuthProvider
 
 // Definición de los posibles estados de la aplicación
 const AppState = {
@@ -127,6 +129,7 @@ function AppContent() {
         return (
           <>
             <Hero />
+            <HowItWorks /> {/* <--- Añadir el componente HowItWorks aquí */}
             <InvestmentPlans />
           </>
         );
@@ -151,17 +154,29 @@ function AppContent() {
 }
 
 function App() {
+  // Obtener el ID de cliente de Google de las variables de entorno
+  const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID; 
+
+  // Opcional: Mostrar un error si la variable no está configurada (útil en desarrollo)
+  if (!GOOGLE_CLIENT_ID) {
+    console.error("VITE_GOOGLE_CLIENT_ID is not defined. Please set it in your .env file for local development or in Vercel environment variables for deployment.");
+    return <div className="flex items-center justify-center min-h-screen text-red-500">Error: Google Client ID not configured.</div>;
+  }
+
   return (
-    <AdminProvider>
-      <ThemeProvider>
-        <WalletProvider>
-          <WithdrawalFeedProvider>
-            <AppContent />
-            <WithdrawalFeed />
-          </WithdrawalFeedProvider>
-        </WalletProvider>
-      </ThemeProvider>
-    </AdminProvider>
+    // Envolver toda la aplicación con GoogleOAuthProvider
+    <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}> 
+      <AdminProvider>
+        <ThemeProvider>
+          <WalletProvider>
+            <WithdrawalFeedProvider>
+              <AppContent />
+              <WithdrawalFeed />
+            </WithdrawalFeedProvider>
+          </WalletProvider>
+        </ThemeProvider>
+      </AdminProvider>
+    </GoogleOAuthProvider>
   );
 }
 
