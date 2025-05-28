@@ -1,5 +1,5 @@
 import React from 'react';
-import { FaHandshake, FaCoins, FaUsers, FaChartLine } from 'react-icons/fa'; // Updated icons for relevance
+import { FaHandshake, FaCoins, FaUsers, FaChartLine, FaWallet } from 'react-icons/fa'; // Updated icons for relevance
 import { useWallet } from '../context/WalletContext';
 
 function Hero() {
